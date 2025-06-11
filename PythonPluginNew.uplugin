@@ -1,0 +1,55 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "Python Script Plugin New",
+	"Description": "Python for the Unreal Editor and Runtime.",
+	"Category": "Scripting",
+	"CreatedBy": "ND",
+	"CreatedByURL": "https://epicgames.com",
+	"DocsURL": "https://docs.unrealengine.com/en-US/Engine/Editor/ScriptingAndAutomation/Python/index.html",
+	"MarketplaceURL": "",
+	"SupportURL": "https://forums.unrealengine.com/",
+	"EnabledByDefault": false,
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"SupportedPrograms": ["LiveLinkHub"],
+	"Modules": [
+		{
+			"Name": "PythonPluginNew",
+			"Type": "Runtime",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "PythonAutomation",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "PythonConsole",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		},
+		{
+			"Name": "PythonEditor",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "ContentBrowserFileDataSource",
+			"Enabled": true,
+			"ProgramAllowList": [ "LiveLinkHub" ],
+			"TargetAllowList": [
+				"Editor",
+				"Program"
+			]
+		},		
+		{
+			"Name": "LevelSequenceEditor",
+			"Enabled": true
+		}
+	]
+}
