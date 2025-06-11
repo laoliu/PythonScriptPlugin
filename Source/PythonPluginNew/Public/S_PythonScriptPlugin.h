@@ -32,7 +32,7 @@ enum class EPackageReloadPhase : uint8;
 class FPythonCommandExecutor : public IConsoleCommandExecutor
 {
 public:
-	FPythonCommandExecutor(IPythonScriptPlugin* InPythonScriptPlugin);
+	FPythonCommandExecutor(IPythonScriptPlugin_S* InPythonScriptPlugin);
 
 	static FName StaticName();
 	virtual FName GetName() const override;
@@ -48,7 +48,7 @@ public:
 	virtual FInputChord GetIterateExecutorHotKey() const override;
 
 private:
-	IPythonScriptPlugin* PythonScriptPlugin;
+	IPythonScriptPlugin_S* PythonScriptPlugin;
 };
 
 /**
@@ -57,7 +57,7 @@ private:
 class FPythonREPLCommandExecutor : public IConsoleCommandExecutor
 {
 public:
-	FPythonREPLCommandExecutor(IPythonScriptPlugin* InPythonScriptPlugin);
+	FPythonREPLCommandExecutor(IPythonScriptPlugin_S* InPythonScriptPlugin);
 
 	static FName StaticName();
 	virtual FName GetName() const override;
@@ -73,7 +73,7 @@ public:
 	virtual FInputChord GetIterateExecutorHotKey() const override;
 
 private:
-	IPythonScriptPlugin* PythonScriptPlugin;
+	IPythonScriptPlugin_S* PythonScriptPlugin;
 };
 
 /**
@@ -91,7 +91,7 @@ struct IPythonCommandMenu
 #endif	// WITH_PYTHON
 
 class FPythonPluginNew 
-	: public IPythonScriptPlugin
+	: public IPythonScriptPlugin_S
 	, public FSelfRegisteringExec
 	, public FEnumEditorUtils::INotifyOnEnumChanged
 {
@@ -101,13 +101,13 @@ public:
 	/** Get this module */
 	static FPythonPluginNew* Get()
 	{
-		return static_cast<FPythonPluginNew*>(IPythonScriptPlugin::Get());
+		return static_cast<FPythonPluginNew*>(IPythonScriptPlugin_S::Get());
 	}
 
 	//~ IPythonScriptPlugin interface
 	virtual bool IsPythonAvailable() const override;
 	virtual bool ExecPythonCommand(const TCHAR* InPythonCommand) override;
-	virtual bool ExecPythonCommandEx(FPythonCommandEx& InOutPythonCommand) override;
+	virtual bool ExecPythonCommandEx(FPythonCommandEx_S& InOutPythonCommand) override;
 	virtual FString GetInterpreterExecutablePath() const override;
 	virtual FSimpleMulticastDelegate& OnPythonInitialized() override;
 	virtual FSimpleMulticastDelegate& OnPythonShutdown() override;
@@ -139,10 +139,10 @@ public:
 	PyObject* EvalString(const TCHAR* InStr, const TCHAR* InContext, const int InMode, PyObject* InGlobalDict, PyObject* InLocalDict);
 
 	/** Run literal Python script */
-	bool RunString(FPythonCommandEx& InOutPythonCommand);
+	bool RunString(FPythonCommandEx_S& InOutPythonCommand);
 
 	/** Run a Python file */
-	bool RunFile(const TCHAR* InFile, const TCHAR* InArgs, FPythonCommandEx& InOutPythonCommand);
+	bool RunFile(const TCHAR* InFile, const TCHAR* InArgs, FPythonCommandEx_S& InOutPythonCommand);
 
 	PyObject* GetDefaultGlobalDict() { return PyDefaultGlobalDict.Get(); }
 	PyObject* GetDefaultLocalDict()  { return PyDefaultLocalDict.Get();  }
@@ -150,6 +150,7 @@ public:
 	PyObject* GetConsoleLocalDict()  { return PyConsoleLocalDict.Get();  }
 #endif	// WITH_PYTHON
 
+	TArray<FString> ScriptsPaths;
 protected:
 	//~ FSelfRegisteringExec interface
 	virtual bool Exec_Runtime(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override;
@@ -200,6 +201,10 @@ private:
 	void PopulatePythonFileContextMenu(UToolMenu* InMenu);
 
 	TStrongObjectPtr<UContentBrowserFileDataSource> PythonFileDataSource;
+
+	void LoadSharedDSO(const FString& PythonDSOWildcard, const FString& PythonDir);
+	void LoadPythonLibraries();
+	void UnloadPythonLibraries();
 #endif	// WITH_EDITOR
 
 	TUniquePtr<FPythonScriptRemoteExecution> RemoteExecution;
@@ -228,4 +233,5 @@ private:
 
 	FSimpleMulticastDelegate OnPythonInitializedDelegate;
 	FSimpleMulticastDelegate OnPythonShutdownDelegate;
+	TArray<void*> DLLHandles;
 };

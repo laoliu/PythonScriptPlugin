@@ -326,7 +326,7 @@ void FPyOnlineDocsWriter::GenerateFiles(const FString& InPythonStubPath)
 		PyCommandStr.Appendf(TEXT("subprocess.check_call(['%s', '%s'])\n"), *PythonPath, *PythonStubDestPath);
 
 		UE_LOG(LogPython, Display, TEXT("Validating the unreal generated stub file..."));
-		if (!IPythonScriptPlugin::Get()->ExecPythonCommand(*PyCommandStr))
+		if (!IPythonScriptPlugin_S::Get()->ExecPythonCommand(*PyCommandStr))
 		{
 			UE_LOG(LogPython, Error, TEXT("The unreal generated stub file failed to import. Aborting!"));
 			return;
@@ -360,7 +360,7 @@ void FPyOnlineDocsWriter::GenerateFiles(const FString& InPythonStubPath)
 			//PyCommandStr.Append(TEXT("pip.main(['install', 'sphinx'])\n"));
 
 			UE_LOG(LogPython, Display, TEXT("Installing Sphinx..."));
-			IPythonScriptPlugin::Get()->ExecPythonCommand(*PyCommandStr);
+			IPythonScriptPlugin_S::Get()->ExecPythonCommand(*PyCommandStr);
 			UE_LOG(LogPython, Display, TEXT("  ... finished installing Sphinx."));
 		}
 
@@ -389,7 +389,7 @@ void FPyOnlineDocsWriter::GenerateFiles(const FString& InPythonStubPath)
 
 			// Run the Python commands
 			UE_LOG(LogPython, Display, TEXT("Calling Sphinx in PythonPlugin/SphinxDocs to generate the HTML. This can take a long time - 25+ minutes for full build on test system..."));
-			bool PyRunSuccess = IPythonScriptPlugin::Get()->ExecPythonCommand(*PyCommandStr);
+			bool PyRunSuccess = IPythonScriptPlugin_S::Get()->ExecPythonCommand(*PyCommandStr);
 
 #if !NO_LOGGING
 			if (!bLogSphinx)

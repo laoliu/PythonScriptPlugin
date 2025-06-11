@@ -87,10 +87,10 @@ namespace InternalEditorPythonRunner
 					{
 						bIsRunning = true;
 
-						FPythonCommandEx PythonCommand;
+						FPythonCommandEx_S PythonCommand;
 						PythonCommand.Flags |= EPythonCommandFlags_S::Unattended; // Prevent all dialog modal from showing up
 						PythonCommand.Command = ScriptAndArgs;
-						if (!IPythonScriptPlugin::Get()->ExecPythonCommandEx(PythonCommand))
+						if (!IPythonScriptPlugin_S::Get()->ExecPythonCommandEx(PythonCommand))
 						{
 							if (bErrorsAreFatal)
 							{
@@ -187,13 +187,13 @@ void FEditorPythonExecuter::OnStartupModule()
 		{
 			UE_LOG(LogEditorPythonExecuter, Error, TEXT("-ExecutePythonScript cannot be used by a commandlet."));
 		}
-		else if (!IPythonScriptPlugin::Get()->IsPythonAvailable())
+		else if (!IPythonScriptPlugin_S::Get()->IsPythonAvailable())
 		{
 			UE_LOG(LogEditorPythonExecuter, Error, TEXT("-ExecutePythonScript cannot be used when Python support is disabled."));
 		}
 		else
 		{
-			IPythonScriptPlugin::Get()->OnPythonInitialized().AddLambda([ScriptAndArgs = MoveTemp(ScriptAndArgs), bScriptErrorsAreFatal = FParse::Param(FCommandLine::Get(), TEXT("ScriptErrorsAreFatal"))]() mutable
+			IPythonScriptPlugin_S::Get()->OnPythonInitialized().AddLambda([ScriptAndArgs = MoveTemp(ScriptAndArgs), bScriptErrorsAreFatal = FParse::Param(FCommandLine::Get(), TEXT("ScriptErrorsAreFatal"))]() mutable
 			{
 				InternalEditorPythonRunner::CreateNotification(ScriptAndArgs);
 				InternalEditorPythonRunner::Executer = MakeUnique<InternalEditorPythonRunner::FExecuterTickable>(MoveTemp(ScriptAndArgs), bScriptErrorsAreFatal);

@@ -541,7 +541,7 @@ private:
 		const TSharedPtr<FJsonObject>* CommandData = nullptr;
 		if (InMessage.Data && InMessage.Data->TryGetObject(CommandData) && *CommandData)
 		{
-			FPythonCommandEx PythonCommand;
+			FPythonCommandEx_S PythonCommand;
 
 			if (!(*CommandData)->TryGetStringField(TEXT("command"), PythonCommand.Command))
 			{
@@ -633,7 +633,7 @@ private:
 	FSocket* CommandChannelSocket;
 };
 
-FPythonScriptRemoteExecution::FPythonScriptRemoteExecution(IPythonScriptPlugin* InPythonScriptPlugin)
+FPythonScriptRemoteExecution::FPythonScriptRemoteExecution(IPythonScriptPlugin_S* InPythonScriptPlugin)
 	: PythonScriptPlugin(InPythonScriptPlugin)
 	, SocketSubsystem(ISocketSubsystem::Get())
 	, NodeId(FApp::GetInstanceId().ToString())

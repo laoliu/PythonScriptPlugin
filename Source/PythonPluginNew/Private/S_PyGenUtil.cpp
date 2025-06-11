@@ -2643,7 +2643,7 @@ FString GetModulePythonName(const FName InModuleName, const bool bIncludePrefix)
 		{ TEXT("CoreUObject"), TEXT("Core") },
 		{ TEXT("SlateCore"), TEXT("Slate") },
 		{ TEXT("UnrealEd"), TEXT("Editor") },
-		{ TEXT("PythonScriptPlugin"), TEXT("Python") },
+		{ TEXT("PythonPluginNew"), TEXT("Python") },
 	};
 
 	FName MappedModuleName = InModuleName;

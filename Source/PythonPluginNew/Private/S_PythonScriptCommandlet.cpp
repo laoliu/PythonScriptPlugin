@@ -35,7 +35,7 @@ int32 UPythonScriptCommandlet_S::Main(const FString& Params)
 		return -1;
 	}
 
-	if (!IPythonScriptPlugin::Get()->IsPythonAvailable())
+	if (!IPythonScriptPlugin_S::Get()->IsPythonAvailable())
 	{
 		UE_LOG(LogPythonScriptCommandlet, Error, TEXT("Python script cannot run as Python support is disabled!"));
 		return -1;
@@ -47,10 +47,10 @@ int32 UPythonScriptCommandlet_S::Main(const FString& Params)
 	{
 		UE_LOG(LogPythonScriptCommandlet, Display, TEXT("Running Python script: %s"), *PythonScript);
 
-		FPythonCommandEx PythonCommand;
+		FPythonCommandEx_S PythonCommand;
 		PythonCommand.Flags |= EPythonCommandFlags_S::Unattended;
 		PythonCommand.Command = PythonScript;
-		if (!IPythonScriptPlugin::Get()->ExecPythonCommandEx(PythonCommand))
+		if (!IPythonScriptPlugin_S::Get()->ExecPythonCommandEx(PythonCommand))
 		{
 			UE_LOG(LogPythonScriptCommandlet, Error, TEXT("Python script executed with errors"));
 			return -1;

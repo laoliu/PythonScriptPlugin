@@ -13,8 +13,8 @@ static void callback(void *arg)
 
 void UPythonScript::Run()
 {
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
-	FPythonCommandEx PythonCommand;
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
+	FPythonCommandEx_S PythonCommand;
 	PythonCommand.Command = *ScriptPath;
 	TCHAR* args = UTF8_TO_TCHAR("UPythonScript");
 	PythonModule.RunFile(*ScriptPath, args, PythonCommand);

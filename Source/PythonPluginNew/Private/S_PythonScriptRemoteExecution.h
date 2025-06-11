@@ -8,7 +8,7 @@
 struct FIPv4Endpoint;
 
 class ISocketSubsystem;
-class IPythonScriptPlugin;
+class IPythonScriptPlugin_S;
 class FPythonScriptRemoteExecutionCommandConnection;
 class FPythonScriptRemoteExecutionBroadcastConnection;
 
@@ -20,7 +20,7 @@ class FPythonScriptRemoteExecution
 	friend class FPythonScriptRemoteExecutionBroadcastConnection;
 
 public:
-	explicit FPythonScriptRemoteExecution(IPythonScriptPlugin* InPythonScriptPlugin);
+	explicit FPythonScriptRemoteExecution(IPythonScriptPlugin_S* InPythonScriptPlugin);
 	~FPythonScriptRemoteExecution();
 
 	/** Start remote execution based on the current settings (also called during construction if remote execution should be active) */
@@ -43,7 +43,7 @@ private:
 	void CloseCommandConnection(const FString& InRemoteNodeId);
 
 	/** The Python plugin that owns this instance */
-	IPythonScriptPlugin* PythonScriptPlugin;
+	IPythonScriptPlugin_S* PythonScriptPlugin;
 
 	/** Cached socket subsystem pointer */
 	ISocketSubsystem* SocketSubsystem;

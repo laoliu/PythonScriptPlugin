@@ -26,7 +26,6 @@
 #include "Runtime/Core/Public/Mac/CocoaThread.h"
 #endif
 
-void unreal_engine_init_py_module();
 void init_unreal_engine_builtin();
 
 #if PLATFORM_LINUX

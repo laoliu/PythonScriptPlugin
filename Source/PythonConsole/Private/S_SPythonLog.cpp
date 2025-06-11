@@ -228,7 +228,7 @@ void SPythonConsoleInputBox::OnTextCommitted(const FText& InText, ETextCommit::T
 
 			// Here run the python code
 			//
-			FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+			FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 
 			if (IsMultiline)
 			{
@@ -256,7 +256,7 @@ void SPythonConsoleInputBox::OnTextCommitted(const FText& InText, ETextCommit::T
 		else if (IsMultiline)
 		{
 			IsMultiline = false;
-			FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+			FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 			PythonModule.ExecPythonCommand(*MultilineString);
 		}
 

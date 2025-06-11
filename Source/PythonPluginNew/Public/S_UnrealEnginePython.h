@@ -26,6 +26,7 @@
 #include "Runtime/SlateCore/Public/Styling/SlateStyle.h"
 #include "UObject/ScriptMacros.h"
 #include "Runtime/Launch/Resources/Version.h"
+#include "S_PyGIL.h"
 
 #if PLATFORM_MAC
 #include <Python.h>
@@ -62,6 +63,8 @@ typedef struct
 
 void ue_py_register_magic_module(char *name, PyObject *(*)());
 PyObject *ue_py_register_module(const char *);
+
+void unreal_engine_init_py_module();
 
 #if ENGINE_MAJOR_VERSION == 5 || (ENGINE_MAJOR_VERSION == 4 && ENGINE_MINOR_VERSION >= 18)
 #define FStringAssetReference FSoftObjectPath
@@ -212,23 +215,4 @@ private:
 
 	TSharedPtr<FSlateStyleSet> StyleSet;
 };
-
-struct FScopePythonGIL
-{
-
-	PyGILState_STATE state;
-
-	FScopePythonGIL()
-	{
-		state = PyGILState_Ensure();
-	}
-
-	~FScopePythonGIL()
-	{
-		PyGILState_Release(state);
-	}
-};
-
-
-
-
+typedef class FPyScopedGIL FScopePythonGIL;

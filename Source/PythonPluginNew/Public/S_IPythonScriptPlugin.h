@@ -7,14 +7,14 @@
 #include "Modules/ModuleManager.h"
 #include "Modules/ModuleInterface.h"
 
-class IPythonScriptPlugin : public IModuleInterface
+class IPythonScriptPlugin_S : public IModuleInterface
 {
 public:
 	/** Get this module */
-	static IPythonScriptPlugin* Get()
+	static IPythonScriptPlugin_S* Get()
 	{
 		static const FName ModuleName = "PythonPluginNew";
-		return FModuleManager::GetModulePtr<IPythonScriptPlugin>(ModuleName);
+		return FModuleManager::GetModulePtr<IPythonScriptPlugin_S>(ModuleName);
 	}
 
 	/**
@@ -33,7 +33,7 @@ public:
 	 * Execute the given Python command.
 	 * @return true if the command ran successfully, false if there were errors.
 	 */
-	virtual bool ExecPythonCommandEx(FPythonCommandEx& InOutPythonCommand) = 0;
+	virtual bool ExecPythonCommandEx(FPythonCommandEx_S& InOutPythonCommand) = 0;
 	
 	/**
 	 * Get the path to the Python interpreter executable of the Python SDK this plugin was compiled against.

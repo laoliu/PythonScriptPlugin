@@ -91,7 +91,7 @@ struct FPythonLogOutputEntry_S
 };
 
 /** Extended information when executing Python commands. */
-struct FPythonCommandEx
+struct FPythonCommandEx_S
 {
 	/** Flags controlling how the command should be run. */
 	EPythonCommandFlags_S Flags = EPythonCommandFlags_S::None;

@@ -106,7 +106,7 @@ bool SPythonEditor::CanSave() const
 void SPythonEditor::Execute() const
 {
 	Save();
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 	
 	FString SelectionString = PythonEditableText->GetSelectedText().ToString();
 	if (SelectionString.Len() == 0) {
@@ -119,7 +119,7 @@ void SPythonEditor::Execute() const
 void SPythonEditor::ExecuteInMainThread() const
 {
 	Save();
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 	
 	FString SelectionString = PythonEditableText->GetSelectedText().ToString();
 	if (SelectionString.Len() == 0) {
@@ -133,7 +133,7 @@ void SPythonEditor::ExecuteInMainThread() const
 void SPythonEditor::PEP8ize() const
 {
 	Save();
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 
 	//FString CleanedCode = PythonModule.Pep8ize(PythonEditableText->GetText().ToString());
 

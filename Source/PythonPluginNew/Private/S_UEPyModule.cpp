@@ -173,8 +173,8 @@ static PyObject* py_unreal_engine_exec(PyObject* self, PyObject* args)
 	{
 		return NULL;
 	}
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
-	FPythonCommandEx PythonCommand;
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
+	FPythonCommandEx_S PythonCommand;
 	PythonCommand.Command = filename;
 	TCHAR* args1 = UTF8_TO_TCHAR(filename);
 	TCHAR* args2 = UTF8_TO_TCHAR("PyObject");
@@ -194,7 +194,7 @@ static PyObject* py_unreal_engine_exec_in_main_thread(PyObject* self, PyObject* 
 	{
 		return NULL;
 	}
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 	FPythonCommandEx PythonCommand;
 	PythonCommand.Command = *filename;
 	TCHAR* args = UTF8_TO_TCHAR("PyObject");
@@ -242,7 +242,7 @@ static PyObject* py_unreal_engine_set_brutal_finalize(PyObject* self, PyObject* 
 
 	bool bBrutalFinalize = !py_bool || PyObject_IsTrue(py_bool);
 
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 	//PythonModule.BrutalFinalize = bBrutalFinalize;
 	Py_RETURN_NONE;
 }
@@ -2052,8 +2052,8 @@ void unreal_engine_init_py_module()
 #endif
 
 	ue_PyUObjectType.tp_new = PyType_GenericNew;
-	//ue_PyUObjectType.tp_init = (initproc)unreal_engine_py_init;
-	//ue_PyUObjectType.tp_dictoffset = offsetof(ue_PyUObject, py_dict);
+	ue_PyUObjectType.tp_init = (initproc)unreal_engine_py_init;
+	ue_PyUObjectType.tp_dictoffset = offsetof(ue_PyUObject, py_dict);
 
 	if (PyType_Ready(&ue_PyUObjectType) < 0)
 		return;
@@ -2072,7 +2072,7 @@ void unreal_engine_init_py_module()
 	Py_INCREF(&ue_PyFPropertyType);
 	PyModule_AddObject(new_unreal_engine_module, "FProperty", (PyObject*)& ue_PyFPropertyType);
 
-	//EXTRA_UE_LOG(LogPython, Warning, TEXT("offset of tp_name is %d %x"), offsetof(PyTypeObject, tp_name), offsetof(PyTypeObject, tp_name));
+	EXTRA_UE_LOG(LogPython, Warning, TEXT("offset of tp_name is %d %x"), offsetof(PyTypeObject, tp_name), offsetof(PyTypeObject, tp_name));
 
 	ue_PyFFieldClassType.tp_new = PyType_GenericNew;
 	ue_PyFFieldClassType.tp_init = (initproc)unreal_engine_py_ffieldclass_init;
@@ -2084,7 +2084,7 @@ void unreal_engine_init_py_module()
 	Py_INCREF(&ue_PyFFieldClassType);
 	PyModule_AddObject(new_unreal_engine_module, "FFieldClass", (PyObject*)& ue_PyFFieldClassType);
 
-	//EXTRA_UE_LOG(LogPython, Warning, TEXT("offset of tp_name is %d %x"), offsetof(PyTypeObject, tp_name), offsetof(PyTypeObject, tp_name));
+	EXTRA_UE_LOG(LogPython, Warning, TEXT("offset of tp_name is %d %x"), offsetof(PyTypeObject, tp_name), offsetof(PyTypeObject, tp_name));
 #endif
 
 	PyObject* unreal_engine_dict = PyModule_GetDict(new_unreal_engine_module);

@@ -13,22 +13,22 @@
 
 bool UPythonScriptLibrary_S::IsPythonAvailable()
 {
-	return IPythonScriptPlugin::Get()->IsPythonAvailable();
+	return IPythonScriptPlugin_S::Get()->IsPythonAvailable();
 }
 
 bool UPythonScriptLibrary_S::ExecutePythonCommand(const FString& PythonCommand)
 {
-	return IPythonScriptPlugin::Get()->ExecPythonCommand(*PythonCommand);
+	return IPythonScriptPlugin_S::Get()->ExecPythonCommand(*PythonCommand);
 }
 
 bool UPythonScriptLibrary_S::ExecutePythonCommandEx(const FString& PythonCommand, FString& CommandResult, TArray<FPythonLogOutputEntry_S>& LogOutput, const EPythonCommandExecutionMode_S ExecutionMode, const EPythonFileExecutionScope_S FileExecutionScope)
 {
-	FPythonCommandEx PythonCommandEx;
+	FPythonCommandEx_S PythonCommandEx;
 	PythonCommandEx.Command = PythonCommand;
 	PythonCommandEx.ExecutionMode = ExecutionMode;
 	PythonCommandEx.FileExecutionScope = FileExecutionScope;
 
-	const bool bResult = IPythonScriptPlugin::Get()->ExecPythonCommandEx(PythonCommandEx);
+	const bool bResult = IPythonScriptPlugin_S::Get()->ExecPythonCommandEx(PythonCommandEx);
 		
 	CommandResult = MoveTemp(PythonCommandEx.CommandResult);
 	LogOutput = MoveTemp(PythonCommandEx.LogOutput);

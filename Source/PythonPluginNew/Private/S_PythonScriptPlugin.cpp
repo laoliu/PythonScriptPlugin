@@ -59,6 +59,7 @@
 #include "Toolkits/GlobalEditorCommonCommands.h"
 #include "Misc/FeedbackContext.h"
 #include "S_PipInstall.h"
+#include "IPythonScriptPlugin.h"
 #endif	// WITH_EDITOR
 
 #if PLATFORM_WINDOWS
@@ -70,7 +71,7 @@
 
 #define LOCTEXT_NAMESPACE "PythonPluginNew"
 
-#define UE_PYTHON_DEFER_INIT (1)
+#define UE_PYTHON_DEFER_INIT (0)
 
 #if WITH_PYTHON
 
@@ -216,7 +217,7 @@ private:
 #endif	// PLATFORM_WINDOWS
 };
 
-FPythonCommandExecutor::FPythonCommandExecutor(IPythonScriptPlugin* InPythonScriptPlugin)
+FPythonCommandExecutor::FPythonCommandExecutor(IPythonScriptPlugin_S* InPythonScriptPlugin)
 	: PythonScriptPlugin(InPythonScriptPlugin)
 {
 }
@@ -295,7 +296,7 @@ FInputChord FPythonCommandExecutor::GetIterateExecutorHotKey() const
 #endif
 }
 
-FPythonREPLCommandExecutor::FPythonREPLCommandExecutor(IPythonScriptPlugin* InPythonScriptPlugin)
+FPythonREPLCommandExecutor::FPythonREPLCommandExecutor(IPythonScriptPlugin_S* InPythonScriptPlugin)
 	: PythonScriptPlugin(InPythonScriptPlugin)
 {
 }
@@ -341,7 +342,7 @@ bool FPythonREPLCommandExecutor::Exec(const TCHAR* Input)
 
 	UE_LOG(LogPython, Log, TEXT("%s"), Input);
 
-	FPythonCommandEx PythonCommand;
+	FPythonCommandEx_S PythonCommand;
 	PythonCommand.ExecutionMode = EPythonCommandExecutionMode_S::ExecuteStatement;
 	PythonCommand.Command = Input;
 	PythonScriptPlugin->ExecPythonCommandEx(PythonCommand);
@@ -646,15 +647,82 @@ bool FPythonPluginNew::IsPythonAvailable() const
 	return false;
 #endif
 }
+#if WITH_PYTHON
+void FPythonPluginNew::LoadSharedDSO(const FString& PythonDSOWildcard, const FString& PythonDir)
+{
+	auto FindPythonDSOs = [&PythonDSOWildcard](const FString& InPath)
+		{
+			TArray<FString> PythonDSONames;
+			IFileManager::Get().FindFiles(PythonDSONames, *(InPath / PythonDSOWildcard), true, false);
+			for (FString& PythonDSOName : PythonDSONames)
+			{
+				PythonDSOName = InPath / PythonDSOName;
+				FPaths::NormalizeFilename(PythonDSOName);
+			}
+			return PythonDSONames;
+		};
 
+	TArray<FString> PythonDSOPaths = FindPythonDSOs(PythonDir);
+#if PLATFORM_WINDOWS
+	if (PythonDSOPaths.Num() == 0)
+	{
+		// If we didn't find anything, check the Windows directory as the DLLs can sometimes be installed there
+		FString WinDir = FPlatformMisc::GetEnvironmentVariable(TEXT("WINDIR"));
+		if (!WinDir.IsEmpty())
+		{
+			PythonDSOPaths = FindPythonDSOs(WinDir / TEXT("System32"));
+		}
+	}
+#endif
+
+	for (const FString& PythonDSOPath : PythonDSOPaths)
+	{
+		void* DLLHandle = FPlatformProcess::GetDllHandle(*PythonDSOPath);
+		check(DLLHandle != nullptr);
+		DLLHandles.Add(DLLHandle);
+	}
+}
+
+void FPythonPluginNew::LoadPythonLibraries()
+{
+#if PLATFORM_WINDOWS || PLATFORM_LINUX
+	// Load the DSOs
+	{
+		// Build the full Python directory (UE_PYTHON_DIR may be relative to the engine directory for portability)
+		FString PythonDir = UTF8_TO_TCHAR(UE_PYTHON_DIR);
+		PythonDir.ReplaceInline(TEXT("{ENGINE_DIR}"), *FPaths::EngineDir(), ESearchCase::CaseSensitive);
+		FPaths::NormalizeDirectoryName(PythonDir);
+		FPaths::RemoveDuplicateSlashes(PythonDir);
+
+#if PLATFORM_WINDOWS
+		const FString PythonDSOWildcard = FString::Printf(TEXT("python%d*.dll"), PY_MAJOR_VERSION);
+#elif PLATFORM_LINUX
+		const FString PythonDSOWildcard = FString::Printf(TEXT("libpython%d*.so.1.0"), PY_MAJOR_VERSION);
+		PythonDir /= TEXT("lib");
+#endif
+		LoadSharedDSO(PythonDSOWildcard, PythonDir);
+	}
+#endif	// PLATFORM_WINDOWS || PLATFORM_LINUX
+}
+
+void FPythonPluginNew::UnloadPythonLibraries()
+{
+	for (void* DLLHandle : DLLHandles)
+	{
+		FPlatformProcess::FreeDllHandle(DLLHandle);
+	}
+	DLLHandles.Reset();
+}
+
+#endif	// WITH_PYTHON
 bool FPythonPluginNew::ExecPythonCommand(const TCHAR* InPythonCommand)
 {
-	FPythonCommandEx PythonCommand;
+	FPythonCommandEx_S PythonCommand;
 	PythonCommand.Command = InPythonCommand;
 	return ExecPythonCommandEx(PythonCommand);
 }
 
-bool FPythonPluginNew::ExecPythonCommandEx(FPythonCommandEx& InOutPythonCommand)
+bool FPythonPluginNew::ExecPythonCommandEx(FPythonCommandEx_S& InOutPythonCommand)
 {
 #if WITH_PYTHON
 	if (!IsPythonAvailable())
@@ -800,6 +868,16 @@ void FPythonPluginNew::StartupModule()
 		return;
 	}
 
+#if WITH_EDITOR
+	if (Py_IsInitialized())
+	{
+		FModuleManager::GetModulePtr<IPythonScriptPlugin>("PythonScriptPlugin")->ShutdownModule();
+	}
+#endif
+#if WITH_PYTHON
+	UnloadPythonLibraries();
+	LoadPythonLibraries();
+#endif	// WITH_PYTHON
 #if WITH_PYTHON
 	LLM_SCOPE_BYNAME(TEXT("PythonPluginNew"));
 
@@ -823,12 +901,6 @@ void FPythonPluginNew::OnPostEngineInit()
 {
 	LLM_SCOPE_BYNAME(TEXT("PythonPluginNew"));
 
-#if WITH_EDITOR
-	if (Py_IsInitialized())
-	{
-		IPythonScriptPlugin::Get()->ShutdownModule();
-	}
-#endif
 #if UE_PYTHON_DEFER_INIT
 	InitializePython();
 #endif
@@ -884,6 +956,9 @@ void FPythonPluginNew::ShutdownModule()
 	IModularFeatures::Get().UnregisterModularFeature(IConsoleCommandExecutor::ModularFeatureName(), &CmdExec);
 	IModularFeatures::Get().UnregisterModularFeature(IConsoleCommandExecutor::ModularFeatureName(), &CmdREPLExec);
 	ShutdownPython();
+#endif	// WITH_PYTHON
+#if WITH_PYTHON
+	UnloadPythonLibraries();
 #endif	// WITH_PYTHON
 }
 
@@ -1031,10 +1106,6 @@ void FPythonPluginNew::InitializePython()
 		// Initialize our custom constant type as we'll need it when generating bindings
 		InitializePyConstant();
 
-
-		//unreal_engine_init_py_module();
-
-
 		PyObject* PyMainModule = PyImport_AddModule("__main__");
 		PyDefaultGlobalDict = FPyObjectPtr::NewReference(PyModule_GetDict(PyMainModule));
 		PyDefaultLocalDict = PyDefaultGlobalDict;
@@ -1084,7 +1155,7 @@ void FPythonPluginNew::InitializePython()
 	{
 		// Create the top-level "unreal" module
 		PyUnrealModule = FPyObjectPtr::NewReference(PyImport_AddModule("unreal"));
-		
+
 		// Import "unreal" into the console by default
 		PyDict_SetItemString(PyConsoleGlobalDict, "unreal", PyUnrealModule);
 
@@ -1105,6 +1176,58 @@ void FPythonPluginNew::InitializePython()
 		PyEditor::InitializeModule();
 		ImportUnrealModule(TEXT("editor"));
 #endif	// WITH_EDITOR
+
+		//FPyObjectPtr::NewReference(PyImport_AddModule("unreal_engine"));
+		unreal_engine_init_py_module();
+
+		PyObject* py_sys = PyImport_ImportModule("sys");
+		PyObject* py_sys_dict = PyModule_GetDict(py_sys);
+
+		PyObject* py_path = PyDict_GetItemString(py_sys_dict, "path");
+
+		//PyObject* py_zip_path = PyUnicode_FromString(TCHAR_TO_UTF8(*ZipPath));
+		//PyList_Insert(py_path, 0, py_zip_path);
+
+		FString ProjectScriptsPath = FPaths::Combine(*FPaths::ProjectContentDir(), UTF8_TO_TCHAR("Scripts"));
+		if (!FPaths::DirectoryExists(ProjectScriptsPath))
+		{
+			FPlatformFileManager::Get().GetPlatformFile().CreateDirectory(*ProjectScriptsPath);
+		}
+		ScriptsPaths.Add(ProjectScriptsPath);
+		ScriptsPaths.Add(ProjectScriptsPath + "/game");
+
+#if WITH_EDITOR
+		for (TSharedRef<IPlugin>plugin : IPluginManager::Get().GetEnabledPlugins())
+		{
+			FString PluginScriptsPath = FPaths::Combine(plugin->GetContentDir(), UTF8_TO_TCHAR("Scripts"));
+			if (FPaths::DirectoryExists(PluginScriptsPath))
+			{
+				ScriptsPaths.Add(PluginScriptsPath);
+			}
+
+			// allows third parties to include their code in the main plugin directory
+			if (plugin->GetName() == "PythonPluginNew")
+			{
+				ScriptsPaths.Add(plugin->GetBaseDir());
+			}
+		}
+
+#if PLATFORM_WINDOWS
+		ScriptsPaths.Add(FPaths::Combine(FPaths::EngineDir(), "Binaries", "ThirdParty", "Python3", "Win64", "Lib",
+			"site-packages"));
+#endif
+#endif
+
+		int i = 0;
+		for (FString ScriptsPath : ScriptsPaths)
+		{
+			PyObject* py_scripts_path = PyUnicode_FromString(TCHAR_TO_UTF8(*ScriptsPath));
+			PyList_Insert(py_path, i++, py_scripts_path);
+			//if (verbose)
+			{
+				UE_LOG(LogPython, Log, TEXT("Python Scripts search path: %s"), (*ScriptsPath));
+			}
+		}
 
 		FPyWrapperTypeRegistry::Get().OnModuleDirtied().AddRaw(this, &FPythonPluginNew::OnModuleDirtied);
 		FModuleManager::Get().OnModulesChanged().AddRaw(this, &FPythonPluginNew::OnModulesChanged);
@@ -1423,7 +1546,7 @@ void FPythonPluginNew::RunStartupScripts()
 
 			// Execute these files in the "public" scope, as if their contents had been run directly in the console
 			// This allows them to be used to set-up an editor environment for the console
-			FPythonCommandEx InitUnrealPythonCommand;
+			FPythonCommandEx_S InitUnrealPythonCommand;
 			InitUnrealPythonCommand.FileExecutionScope = EPythonFileExecutionScope_S::Public;
 			
 			UE_SCOPED_TIMER(*StartupScriptInfoText.ToString(), LogPython, Display);
@@ -1562,7 +1685,7 @@ PyObject* FPythonPluginNew::EvalString(const TCHAR* InStr, const TCHAR* InContex
 	return PyEvalResult;
 }
 
-bool FPythonPluginNew::RunString(FPythonCommandEx& InOutPythonCommand)
+bool FPythonPluginNew::RunString(FPythonCommandEx_S& InOutPythonCommand)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE(FPythonPluginNew::RunString)
 
@@ -1606,7 +1729,7 @@ bool FPythonPluginNew::RunString(FPythonCommandEx& InOutPythonCommand)
 	return true;
 }
 
-bool FPythonPluginNew::RunFile(const TCHAR* InFile, const TCHAR* InArgs, FPythonCommandEx& InOutPythonCommand)
+bool FPythonPluginNew::RunFile(const TCHAR* InFile, const TCHAR* InArgs, FPythonCommandEx_S& InOutPythonCommand)
 {
 	TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*FString::Printf(TEXT("FPythonPluginNew::RunFile(%s)"), InFile ? InFile : TEXT("null")));
 

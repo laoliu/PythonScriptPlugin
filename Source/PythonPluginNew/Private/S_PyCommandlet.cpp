@@ -116,9 +116,9 @@ int32 UPyCommandlet::Main(const FString& CommandLine)
 
 	Py_BEGIN_ALLOW_THREADS;
 
-	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonScriptPlugin");
+	FPythonPluginNew& PythonModule = FModuleManager::GetModuleChecked<FPythonPluginNew>("PythonPluginNew");
 	//PythonModule.BrutalFinalize = true;
-	FPythonCommandEx PythonCommand;
+	FPythonCommandEx_S PythonCommand;
 	PythonCommand.Command = *Filepath;
 	TCHAR* args = UTF8_TO_TCHAR("UPyCommandlet");
 	PythonModule.RunFile(*Filepath, args, PythonCommand);
